@@ -29,19 +29,25 @@
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
 
-  /* ---------- Active nav link (scroll spy) ---------- */
-  const navLinks = Array.from(document.querySelectorAll('.nav a'));
-  const sections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  /* ---------- Active nav link (scroll spy) — top nav + chapter TOCs ---------- */
+  const spyLinks = Array.from(document.querySelectorAll('.nav a, .chapter-toc a'));
+  const spyTargets = spyLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
   const spy = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (!e.isIntersecting) return;
-      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+      const id = '#' + e.target.id;
+      // Only toggle links within the same group (top nav vs. chapter toc).
+      spyLinks.forEach(a => {
+        const sameGroup = a.closest('.nav') ? e.target.classList.contains('chapter') || e.target.tagName === 'SECTION'
+                                             : e.target.classList.contains('subsection');
+        if (sameGroup) a.classList.toggle('active', a.getAttribute('href') === id);
+      });
     });
-  }, { rootMargin: '-40% 0px -55% 0px' });
-  sections.forEach(s => spy.observe(s));
+  }, { rootMargin: '-35% 0px -55% 0px' });
+  spyTargets.forEach(s => spy.observe(s));
 
   /* ---------- Reveal-on-scroll ---------- */
-  const revealTargets = document.querySelectorAll('.card, .case, .tl-item, .skill-group, .quote, .edu-card, .stat');
+  const revealTargets = document.querySelectorAll('.card, .case, .stint, .skill-group, .quote, .edu-card, .stat, .subsection-head, .chapter-rail-inner');
   revealTargets.forEach((el, i) => {
     el.classList.add('reveal');
     el.style.transitionDelay = `${Math.min(i % 6, 5) * 50}ms`;
